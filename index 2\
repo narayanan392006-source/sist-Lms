@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Stats Cards */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: inline-block;
+        }
+
+        /* Forms */
+        .form-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        input, select, button {
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 6px 12px;
+        }
+
+        .return-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 6px 12px;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .status-available {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .status-issued {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: none;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-group {
+                flex-direction: column;
+            }
+            
+            th, td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Book Tracking & Issue Management System</h1>
+            <p>Dynamic Memory Approach Using Data Structures</p>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Books</h3>
+                <div class="stat-number" id="totalBooks">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Books Issued</h3>
+                <div class="stat-number" id="issuedBooks">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Available Books</h3>
+                <div class="stat-number" id="availableBooks">0</div>
+            </div>
+        </div>
+
+        <!-- Add Book -->
+        <div class="card">
+            <h2>➕ Add New Book</h2>
+            <form id="addBookForm">
+                <div class="form-group">
+                    <input type="text" id="title" placeholder="Book Title" required style="flex: 2;">
+                    <input type="text" id="author" placeholder="Author Name" required style="flex: 1;">
+                    <input type="number" id="copies" placeholder="Total Copies" min="1" required style="flex: 1;">
+                    <button type="submit">Add Book</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Books List -->
+        <div class="card">
+            <h2>📖 All Books</h2>
+            <div id="booksList"></div>
+        </div>
+
+        <!-- Issue Book -->
+        <div class="card">
+            <h2>📤 Issue Book</h2>
+            <form id="issueForm">
+                <div class="form-group">
+                    <select id="bookSelect" required style="flex: 1;">
+                        <option value="">Select Book</option>
+                    </select>
+                    <input type="text" id="studentName" placeholder="Student Name" required style="flex: 1;">
+                    <button type="submit">Issue Book</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Issued Books -->
+        <div class="card">
+            <h2>📋 Currently Issued Books</h2>
+            <div id="issuedList"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // ========== LIBRARY MANAGEMENT SYSTEM ==========
+        // Dynamic Memory Approach using JavaScript Arrays
+        
+        class LibrarySystem {
+            constructor() {
+                this.books = [];
+                this.issues = [];
+                this.nextBookId = 1001;
+                this.nextIssueId = 1;
+                
+                // Load saved data
+                this.loadData();
+                
+                // Setup event listeners
+                this.setupEvents();
+                
+                // Update display
+                this.updateAll();
+            }
+            
+            // Load data from localStorage (like file handling in C)
+            loadData() {
+                const savedBooks = localStorage.getItem('library_books');
+                const savedIssues = localStorage.getItem('library_issues');
+                
+                if (savedBooks) {
+                    this.books = JSON.parse(savedBooks);
+                    // Fix: Check if books array has elements before calculating max
+                    if (this.books.length > 0) {
+                        const maxId = Math.max(...this.books.map(b => b.id));
+                        this.nextBookId = maxId + 1;
+                    } else {
+                        this.nextBookId = 1001;
+                    }
+                }
+                
+                if (savedIssues) {
+                    this.issues = JSON.parse(savedIssues);
+                    // Fix: Check if issues array has elements before calculating max
+                    if (this.issues.length > 0) {
+                        const maxIssueId = Math.max(...this.issues.map(i => i.id));
+                        this.nextIssueId = maxIssueId + 1;
+                    } else {
+                        this.nextIssueId = 1;
+                    }
+                }
+            }
+            
+            // Save data (like fwrite in C)
+            saveData() {
+                localStorage.setItem('library_books', JSON.stringify(this.books));
+                localStorage.setItem('library_issues', JSON.stringify(this.issues));
+            }
+            
+            // Get current date
+            getDate() {
+                const d = new Date();
+                return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+            }
+            
+            // Add book (like malloc in C)
+            addBook(title, author, copies) {
+                // Fix: Ensure copies is a valid number
+                const numCopies = parseInt(copies);
+                if (isNaN(numCopies) || numCopies < 1) {
+                    this.showToast(`❌ Invalid number of copies!`, 'error');
+                    return false;
+                }
+                
+                const book = {
+                    id: this.nextBookId++,
+                    title: title.trim(),
+                    author: author.trim(),
+                    total: numCopies,
+                    available: numCopies
+                };
+                
+                this.books.push(book);
+                this.saveData();
+                this.showToast(`✅ "${title}" added successfully!`);
+                this.updateAll();
+                return true;
+            }
+            
+            // Delete book (like free in C)
+            deleteBook(id) {
+                const book = this.books.find(b => b.id === id);
+                
+                if (!book) {
+                    this.showToast(`❌ Book not found!`, 'error');
+                    return false;
+                }
+                
+                if (book.available < book.total) {
+                    this.showToast(`❌ Cannot delete! ${book.total - book.available} copy/copies are currently issued`, 'error');
+                    return false;
+                }
+                
+                const index = this.books.findIndex(b => b.id === id);
+                if (index !== -1) {
+                    const title = this.books[index].title;
+                    this.books.splice(index, 1);
+                    this.saveData();
+                    this.showToast(`🗑️ "${title}" deleted!`);
+                    this.updateAll();
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            // Issue book
+            issueBook(bookId, studentName) {
+                // Fix: Check if bookId is valid
+                if (!bookId || isNaN(bookId)) {
+                    this.showToast(`❌ Please select a valid book!`, 'error');
+                    return false;
+                }
+                
+                const book = this.books.find(b => b.id === bookId);
+                
+                if (!book) {
+                    this.showToast(`❌ Book not found!`, 'error');
+                    return false;
+                }
+                
+                if (book.available <= 0) {
+                    this.showToast(`❌ No copies available for "${book.title}"!`, 'error');
+                    return false;
+                }
+                
+                if (!studentName || studentName.trim() === '') {
+                    this.showToast(`❌ Please enter student name!`, 'error');
+                    return false;
+                }
+                
+                const issue = {
+                    id: this.nextIssueId++,
+                    bookId: book.id,
+                    bookTitle: book.title,
+                    student: studentName.trim(),
+                    issueDate: this.getDate(),
+                    returnDate: null,
+                    returned: false
+                };
+                
+                this.issues.push(issue);
+                book.available--;
+                
+                this.saveData();
+                this.showToast(`✅ "${book.title}" issued to ${studentName}`);
+                this.updateAll();
+                return true;
+            }
+            
+            // Return book
+            returnBook(issueId) {
+                const issue = this.issues.find(i => i.id === issueId);
+                
+                if (!issue) {
+                    this.showToast(`❌ Issue record not found!`, 'error');
+                    return false;
+                }
+                
+                if (issue.returned) {
+                    this.showToast(`❌ Book already returned!`, 'error');
+                    return false;
+                }
+                
+                const book = this.books.find(b => b.id === issue.bookId);
+                if (book) {
+                    book.available++;
+                }
+                
+                issue.returned = true;
+                issue.returnDate = this.getDate();
+                
+                this.saveData();
+                this.showToast(`✅ "${issue.bookTitle}" returned successfully!`);
+                this.updateAll();
+                return true;
+            }
+            
+            // Display books table
+            displayBooks() {
+                const container = document.getElementById('booksList');
+                
+                if (this.books.length === 0) {
+                    container.innerHTML = '<div class="empty-state">📭 No books available. Add your first book!</div>';
+                    return;
+                }
+                
+                let html = '<div class="table-container"><table><thead><tr>';
+                html += '<th>ID</th><th>Title</th><th>Author</th><th>Total</th><th>Available</th><th>Status</th><th>Action</th>';
+                html += '</tr></thead><tbody>';
+                
+                for (let book of this.books) {
+                    const status = book.available > 0 ? 
+                        '<span class="status-available">✓ Available</span>' : 
+                        '<span class="status-issued">✗ Out of Stock</span>';
+                    
+                    html += `<tr>
+                        <td>${book.id}</td>
+                        <td>${this.escapeHtml(book.title)}</td>
+                        <td>${this.escapeHtml(book.author)}</td>
+                        <td>${book.total}</td>
+                        <td>${book.available}</td>
+                        <td>${status}</td>
+                        <td><button class="delete-btn" onclick="librarySystem.deleteBook(${book.id})">Delete</button></td>
+                    </tr>`;
+                }
+                
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            }
+            
+            // Display issued books
+            displayIssued() {
+                const container = document.getElementById('issuedList');
+                const activeIssues = this.issues.filter(i => !i.returned);
+                
+                if (activeIssues.length === 0) {
+                    container.innerHTML = '<div class="empty-state">📭 No books currently issued</div>';
+                    return;
+                }
+                
+                let html = '<div class="table-container"><table><thead><tr>';
+                html += '<th>Issue ID</th><th>Book ID</th><th>Book Title</th><th>Student</th><th>Issue Date</th><th>Action</th>';
+                html += '</thead><tbody>';
+                
+                for (let issue of activeIssues) {
+                    html += `<tr>
+                        <td>${issue.id}</td>
+                        <td>${issue.bookId}</td>
+                        <td>${this.escapeHtml(issue.bookTitle)}</td>
+                        <td>${this.escapeHtml(issue.student)}</td>
+                        <td>${issue.issueDate}</td>
+                        <td><button class="return-btn" onclick="librarySystem.returnBook(${issue.id})">Return</button></td>
+                    </tr>`;
+                }
+                
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            }
+            
+            // Escape HTML to prevent XSS
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            // Update book select dropdown
+            updateBookSelect() {
+                const select = document.getElementById('bookSelect');
+                const availableBooks = this.books.filter(b => b.available > 0);
+                
+                if (availableBooks.length === 0) {
+                    select.innerHTML = '<option value="">No books available</option>';
+                    return;
+                }
+                
+                select.innerHTML = '<option value="">Select a book</option>';
+                
+                for (let book of availableBooks) {
+                    select.innerHTML += `<option value="${book.id}">${book.id} - ${this.escapeHtml(book.title)} (${book.available} left)</option>`;
+                }
+            }
+            
+            // Update statistics
+            updateStats() {
+                document.getElementById('totalBooks').textContent = this.books.length;
+                document.getElementById('issuedBooks').textContent = this.issues.filter(i => !i.returned).length;
+                
+                let totalAvailable = 0;
+                for (let book of this.books) {
+                    totalAvailable += book.available;
+                }
+                document.getElementById('availableBooks').textContent = totalAvailable;
+            }
+            
+            // Update everything
+            updateAll() {
+                this.displayBooks();
+                this.displayIssued();
+                this.updateBookSelect();
+                this.updateStats();
+            }
+            
+            // Show toast message
+            showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.style.background = type === 'error' ? '#f44336' : '#4caf50';
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Setup event listeners
+            setupEvents() {
+                document.getElementById('addBookForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const title = document.getElementById('title').value;
+                    const author = document.getElementById('author').value;
+                    const copies = document.getElementById('copies').value;
+                    
+                    if (title && author && copies) {
+                        this.addBook(title, author, copies);
+                        e.target.reset();
+                    } else {
+                        this.showToast('❌ Please fill all fields!', 'error');
+                    }
+                });
+                
+                document.getElementById('issueForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const bookId = parseInt(document.getElementById('bookSelect').value);
+                    const studentName = document.getElementById('studentName').value;
+                    
+                    if (bookId && studentName) {
+                        this.issueBook(bookId, studentName);
+                        document.getElementById('studentName').value = '';
+                        document.getElementById('bookSelect').value = '';
+                    } else {
+                        this.showToast('❌ Please select a book and enter student name!', 'error');
+                    }
+                });
+            }
+        }
+        
+        // Start the application - Fix: Use global variable
+        let librarySystem;
+        window.addEventListener('DOMContentLoaded', () => {
+            librarySystem = new LibrarySystem();
+            // Make it global for onclick handlers
+            window.librarySystem = librarySystem;
+        });
+    </script>
+</body>
+</html>
